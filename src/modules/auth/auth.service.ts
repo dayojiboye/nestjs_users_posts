@@ -52,7 +52,7 @@ export class AuthService {
     };
   }
 
-  async validateUser(username: string, pass: string) {
+  public async validateUser(username: string, pass: string) {
     // Find if user exist with this email
     const user = await this.userService.findOneByEmail(username);
     if (!user) {
