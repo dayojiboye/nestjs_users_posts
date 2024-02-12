@@ -13,12 +13,18 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  public async register(user: UserDto) {
+  public async register(user: UserDto): Promise<{
+    user: User;
+    token: string;
+  }> {
     // Hash the password
-    const pass = await this.hashPassword(user.password);
+    const hashedPassword = await this.hashPassword(user.password);
 
     // Create the user
-    const newUser = await this.userService.create({ ...user, password: pass });
+    const newUser = await this.userService.create({
+      ...user,
+      password: hashedPassword,
+    });
 
     const { password, ...result } = newUser['dataValues'];
 
@@ -26,12 +32,15 @@ export class AuthService {
     const token = await this.generateToken(result);
 
     // Return the user and the token
-    return { user: result, token };
+    return { user: result.dataValues, token };
   }
 
-  public async login(user: User) {
+  public async login(user: User): Promise<{
+    user: User;
+    token: string;
+  }> {
     const token = await this.generateToken(user);
-    return { user, token };
+    return { user: user.dataValues, token };
   }
 
   async validateUser(username: string, pass: string) {
