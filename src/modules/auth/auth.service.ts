@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UserDto } from '../users/dto/user.dto';
 import { User } from '../users/user.entity';
+import { AuthResponse } from './auth.interface';
 
 @Injectable()
 export class AuthService {
@@ -13,10 +14,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  public async register(user: UserDto): Promise<{
-    user: User;
-    token: string;
-  }> {
+  public async register(user: UserDto): Promise<AuthResponse> {
     // Hash the password
     const hashedPassword = await this.hashPassword(user.password);
 
@@ -26,21 +24,32 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const { password, ...result } = newUser['dataValues'];
+    const result = newUser.dataValues;
+    delete result.password;
 
     // Generate token
-    const token = await this.generateToken(result);
+    const accessToken = await this.generateToken(result);
 
-    // Return the user and the token
-    return { user: result.dataValues, token };
+    return {
+      user: result,
+      accessToken: {
+        token: accessToken,
+        expiryTimeInMinutes: Number(process.env.TOKEN_EXPIRATION),
+      },
+    };
   }
 
-  public async login(user: User): Promise<{
-    user: User;
-    token: string;
-  }> {
-    const token = await this.generateToken(user);
-    return { user: user.dataValues, token };
+  public async login(user: User): Promise<AuthResponse> {
+    const accessToken = await this.generateToken(user);
+    delete user.password;
+
+    return {
+      user: user,
+      accessToken: {
+        token: accessToken,
+        expiryTimeInMinutes: Number(process.env.TOKEN_EXPIRATION),
+      },
+    };
   }
 
   async validateUser(username: string, pass: string) {
