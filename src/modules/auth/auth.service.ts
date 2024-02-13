@@ -1,11 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UserDto } from '../users/dto/user.dto';
-import { User } from '../users/user.entity';
 import { AuthResponse } from './auth.interface';
+import {
+  DEFAULT_SUCCESS_MESSAGE,
+  INVALID_USER_CREDENTIALS_MESSAGE,
+} from 'src/core/constants';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +16,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  public async register(user: UserDto): Promise<AuthResponse> {
+  public async register(
+    user: UserDto,
+  ): Promise<{ message: string; data: AuthResponse }> {
     // Hash the password
     const hashedPassword = await this.hashPassword(user.password);
 
@@ -31,42 +35,50 @@ export class AuthService {
     const accessToken = await this.generateToken(result);
 
     return {
-      user: result,
-      accessToken: {
-        token: accessToken,
-        expiryTimeInMinutes: Number(process.env.TOKEN_EXPIRATION),
+      message: DEFAULT_SUCCESS_MESSAGE,
+      data: {
+        user: result,
+        accessToken: {
+          token: accessToken,
+          expiryTimeInMinutes: Number(process.env.TOKEN_EXPIRATION),
+        },
       },
     };
   }
 
-  public async login(user: User): Promise<AuthResponse> {
-    const accessToken = await this.generateToken(user);
-    delete user.password;
+  public async login(
+    email: string,
+    pass: string,
+  ): Promise<{ message: string; data: AuthResponse }> {
+    // Find is user exists in DB
+    const user = await this.userService.findOneByEmail(email);
 
-    return {
-      user: user,
-      accessToken: {
-        token: accessToken,
-        expiryTimeInMinutes: Number(process.env.TOKEN_EXPIRATION),
-      },
-    };
-  }
-
-  public async validateUser(username: string, pass: string) {
-    // Find if user exist with this email
-    const user = await this.userService.findOneByEmail(username);
     if (!user) {
-      return null;
+      throw new UnauthorizedException(INVALID_USER_CREDENTIALS_MESSAGE);
     }
 
     // Find if user password match
     const match = await this.comparePassword(pass, user.password);
+
     if (!match) {
-      return null;
+      throw new UnauthorizedException(INVALID_USER_CREDENTIALS_MESSAGE);
     }
 
-    const { password, ...result } = user['dataValues'];
-    return result;
+    const result = user.dataValues;
+    delete result.password;
+
+    const accessToken = await this.generateToken(result);
+
+    return {
+      message: DEFAULT_SUCCESS_MESSAGE,
+      data: {
+        user: result,
+        accessToken: {
+          token: accessToken,
+          expiryTimeInMinutes: Number(process.env.TOKEN_EXPIRATION),
+        },
+      },
+    };
   }
 
   private async comparePassword(
