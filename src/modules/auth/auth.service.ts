@@ -3,11 +3,11 @@ import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UserDto } from '../users/dto/user.dto';
-import { AuthResponse } from './auth.interface';
 import {
   DEFAULT_SUCCESS_MESSAGE,
   INVALID_USER_CREDENTIALS_MESSAGE,
 } from 'src/core/constants';
+import { AuthResponseDto } from './dto/authResponse.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +18,7 @@ export class AuthService {
 
   public async register(
     user: UserDto,
-  ): Promise<{ message: string; data: AuthResponse }> {
+  ): Promise<{ message: string; data: AuthResponseDto }> {
     // Hash the password
     const hashedPassword = await this.hashPassword(user.password);
 
@@ -49,8 +49,8 @@ export class AuthService {
   public async login(
     email: string,
     pass: string,
-  ): Promise<{ message: string; data: AuthResponse }> {
-    // Find is user exists in DB
+  ): Promise<{ message: string; data: AuthResponseDto }> {
+    // Find if user exists in DB
     const user = await this.userService.findOneByEmail(email);
 
     if (!user) {
