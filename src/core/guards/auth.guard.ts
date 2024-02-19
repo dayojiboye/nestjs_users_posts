@@ -27,7 +27,7 @@ export class AuthGuard implements CanActivate {
       });
       // 💡 We're assigning the payload to the request object here
       // so that we can access it in our route handlers
-      request['users'] = payload;
+      request['user'] = payload;
     } catch (err) {
       if (err.message && err.message.includes('jwt expired')) {
         throw new UnauthorizedException(INVALID_TOKEN_MESSAGE);
