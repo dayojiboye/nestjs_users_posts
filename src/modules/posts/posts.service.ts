@@ -14,6 +14,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { Post } from './post.entity';
 import { Sequelize } from 'sequelize-typescript';
 import { User } from '../users/user.entity';
+import { Comment } from '../comments/comment.entity';
 
 @Injectable()
 export class PostsService {
@@ -88,19 +89,19 @@ export class PostsService {
           as: 'author',
           attributes: ['id', 'username'],
         },
-        // {
-        //   model: Comment,
-        //   as: 'comments',
-        //   include: [
-        //     {
-        //       model: User,
-        //       as: 'author',
-        //       attributes: ['id', 'username'],
-        //     },
-        //   ],
-        // },
+        {
+          model: Comment,
+          as: 'comments',
+          include: [
+            {
+              model: User,
+              as: 'author',
+              attributes: ['id', 'username'],
+            },
+          ],
+        },
       ],
-      // order: [[Post.associations.comments, 'createdAt', 'DESC']],
+      order: [[Post.associations.comments, 'createdAt', 'DESC']],
     });
 
     return {

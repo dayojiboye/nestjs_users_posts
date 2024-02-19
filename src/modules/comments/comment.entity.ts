@@ -5,13 +5,12 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
-  HasMany,
 } from 'sequelize-typescript';
 import { User } from '../users/user.entity';
-import { Comment } from '../comments/comment.entity';
+import { Post } from '../posts/post.entity';
 
 @Table
-export class Post extends Model<Post> {
+export class Comment extends Model<Comment> {
   @Column({
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
@@ -19,12 +18,6 @@ export class Post extends Model<Post> {
     primaryKey: true,
   })
   id: string;
-
-  @Column({
-    type: DataType.TEXT,
-    allowNull: false,
-  })
-  title: string;
 
   @Column({
     type: DataType.TEXT,
@@ -42,6 +35,13 @@ export class Post extends Model<Post> {
   @BelongsTo(() => User)
   author: User;
 
-  @HasMany(() => Comment)
-  comments: Comment[];
+  @ForeignKey(() => Post)
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+  })
+  postId: string;
+
+  @BelongsTo(() => Post)
+  post: Post;
 }

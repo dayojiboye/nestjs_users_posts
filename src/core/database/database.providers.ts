@@ -3,6 +3,7 @@ import { SEQUELIZE, DEVELOPMENT, TEST, PRODUCTION } from '../constants';
 import { databaseConfig } from './database.config';
 import { User } from 'src/modules/users/user.entity';
 import { Post } from 'src/modules/posts/post.entity';
+import { Comment } from 'src/modules/comments/comment.entity';
 
 export const databaseProviders = [
   {
@@ -29,7 +30,7 @@ export const databaseProviders = [
       //   .then(() => console.log('Connected to DB'))
       //   .catch((err) => console.log('Error' + err));
 
-      sequelize.addModels([User, Post]);
+      sequelize.addModels([User, Post, Comment]);
 
       await sequelize
         .sync({ force: false })
