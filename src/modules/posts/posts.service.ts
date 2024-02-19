@@ -1,10 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   DEFAULT_SUCCESS_MESSAGE,
   ORDER_BY,
+  POST_NOT_FOUND_MESSAGE,
   POST_REPOSITORY,
 } from 'src/core/constants';
-import { PostDto } from './dto/create-post.dto';
+import { CreatePostDto } from './dto/create-post.dto';
 import { Post } from './post.entity';
 import { Sequelize } from 'sequelize-typescript';
 import { User } from '../users/user.entity';
@@ -17,7 +23,7 @@ export class PostsService {
   ) {}
 
   public async create(
-    post: PostDto,
+    post: CreatePostDto,
     authorId: string,
   ): Promise<{ message: string; data: Post }> {
     const newPost = await this.postRepository.create<Post>({
@@ -100,6 +106,33 @@ export class PostsService {
     return {
       message: DEFAULT_SUCCESS_MESSAGE,
       data: post ?? {},
+    };
+  }
+
+  public async updatePost(
+    postId: string,
+    userId: string,
+    body: CreatePostDto,
+  ): Promise<{ message: string; data: Post }> {
+    const postToUpdate = await this.postRepository.findByPk<Post>(postId);
+
+    if (!postToUpdate) {
+      throw new NotFoundException(POST_NOT_FOUND_MESSAGE);
+    }
+
+    if (postToUpdate.dataValues.authorId !== userId) {
+      throw new ForbiddenException();
+    }
+
+    let editedPost: any = await this.postRepository.update<Post>(body, {
+      where: { id: postId },
+    });
+
+    editedPost = await this.postRepository.findByPk<Post>(postId);
+
+    return {
+      message: 'Post updated successfully',
+      data: editedPost,
     };
   }
 }

@@ -7,10 +7,11 @@ import {
   UseGuards,
   Query,
   Param,
+  Put,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AuthGuard } from 'src/core/guards/auth.guard';
-import { PostDto } from './dto/create-post.dto';
+import { CreatePostDto } from './dto/create-post.dto';
 
 @UseGuards(AuthGuard)
 @Controller('posts')
@@ -18,7 +19,7 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post('create')
-  public async createPost(@Body() newPost: PostDto, @Request() req) {
+  public async createPost(@Body() newPost: CreatePostDto, @Request() req) {
     return await this.postsService.create(newPost, req.user.id);
   }
 
@@ -30,5 +31,14 @@ export class PostsController {
   @Get(':postId')
   public async getPost(@Param('postId') postId: string) {
     return await this.postsService.getPostById(postId);
+  }
+
+  @Put('update/:postId')
+  public async updatePost(
+    @Param('postId') postId: string,
+    @Body() updatedPost: CreatePostDto,
+    @Request() req,
+  ) {
+    return await this.postsService.updatePost(postId, req.user.id, updatedPost);
   }
 }
