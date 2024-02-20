@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  forwardRef,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -12,6 +17,7 @@ import { AuthResponseDto } from './dto/authResponse.dto';
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
@@ -81,7 +87,7 @@ export class AuthService {
     };
   }
 
-  private async comparePassword(
+  public async comparePassword(
     enteredPassword: string | Buffer,
     dbPassword: string,
   ) {
@@ -94,7 +100,7 @@ export class AuthService {
     return token;
   }
 
-  private async hashPassword(password: string | Buffer) {
+  public async hashPassword(password: string | Buffer) {
     const hash = await bcrypt.hash(password, 10);
     return hash;
   }

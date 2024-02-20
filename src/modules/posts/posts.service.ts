@@ -1,13 +1,7 @@
-import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   DEFAULT_SUCCESS_MESSAGE,
   ORDER_BY,
-  POST_NOT_FOUND_MESSAGE,
   POST_REPOSITORY,
 } from 'src/core/constants';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -112,24 +106,13 @@ export class PostsService {
 
   public async updatePost(
     postId: string,
-    userId: string,
     body: CreatePostDto,
   ): Promise<{ message: string; data: Post }> {
-    const postToUpdate = await this.postRepository.findByPk<Post>(postId);
-
-    if (!postToUpdate) {
-      throw new NotFoundException(POST_NOT_FOUND_MESSAGE);
-    }
-
-    if (postToUpdate.dataValues.authorId !== userId) {
-      throw new ForbiddenException();
-    }
-
-    let editedPost: any = await this.postRepository.update<Post>(body, {
+    await this.postRepository.update<Post>(body, {
       where: { id: postId },
     });
 
-    editedPost = await this.postRepository.findByPk<Post>(postId);
+    const editedPost = await this.postRepository.findByPk<Post>(postId);
 
     return {
       message: 'Post updated successfully',
@@ -139,18 +122,7 @@ export class PostsService {
 
   public async deletePost(
     postId: string,
-    userId: string,
   ): Promise<{ message: string; data: object }> {
-    const postToDelete = await this.postRepository.findByPk<Post>(postId);
-
-    if (!postToDelete) {
-      throw new NotFoundException(POST_NOT_FOUND_MESSAGE);
-    }
-
-    if (postToDelete.dataValues.authorId !== userId) {
-      throw new ForbiddenException();
-    }
-
     await this.postRepository.destroy({ where: { id: postId } });
 
     return {

@@ -10,7 +10,7 @@ import { UserDto } from 'src/modules/users/dto/user.dto';
 
 @Injectable()
 export class DoesUserExist implements CanActivate {
-  constructor(private readonly userService: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   canActivate(
     context: ExecutionContext,
@@ -20,11 +20,11 @@ export class DoesUserExist implements CanActivate {
   }
 
   private async validateRequest(request: { body: UserDto }) {
-    const emailExists = await this.userService.findOneByEmail(
+    const emailExists = await this.usersService.findOneByEmail(
       request.body.email,
     );
 
-    const usernameExists = await this.userService.findOneByUsername(
+    const usernameExists = await this.usersService.findOneByUsername(
       request.body.username,
     );
 

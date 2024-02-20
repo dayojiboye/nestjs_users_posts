@@ -13,6 +13,7 @@ import {
 import { PostsService } from './posts.service';
 import { AuthGuard } from 'src/core/guards/auth.guard';
 import { CreatePostDto } from './dto/create-post.dto';
+import { PostGuard } from 'src/core/guards/post.guard';
 
 @UseGuards(AuthGuard)
 @Controller('posts')
@@ -34,17 +35,18 @@ export class PostsController {
     return await this.postsService.getPostById(postId);
   }
 
+  @UseGuards(PostGuard)
   @Put('update/:postId')
   public async updatePost(
     @Param('postId') postId: string,
     @Body() updatedPost: CreatePostDto,
-    @Request() req,
   ) {
-    return await this.postsService.updatePost(postId, req.user.id, updatedPost);
+    return await this.postsService.updatePost(postId, updatedPost);
   }
 
+  @UseGuards(PostGuard)
   @Delete('delete/:postId')
-  public async deletePost(@Param('postId') postId: string, @Request() req) {
-    return await this.postsService.deletePost(postId, req.user.id);
+  public async deletePost(@Param('postId') postId: string) {
+    return await this.postsService.deletePost(postId);
   }
 }

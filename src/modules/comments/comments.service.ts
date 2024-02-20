@@ -1,9 +1,4 @@
-import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   COMMENT_REPOSITORY,
   DEFAULT_SUCCESS_MESSAGE,
@@ -74,19 +69,7 @@ export class CommentsService {
 
   public async deleteComment(
     commentId: string,
-    userId: string,
   ): Promise<{ message: string; data: object }> {
-    const commentToDelete =
-      await this.commentRepository.findByPk<Comment>(commentId);
-
-    if (!commentToDelete) {
-      throw new NotFoundException('No comment found');
-    }
-
-    if (commentToDelete.dataValues.authorId !== userId) {
-      throw new ForbiddenException();
-    }
-
     await this.commentRepository.destroy({ where: { id: commentId } });
 
     return {

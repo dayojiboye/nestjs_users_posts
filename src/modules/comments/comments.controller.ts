@@ -11,6 +11,7 @@ import {
 import { AuthGuard } from 'src/core/guards/auth.guard';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { CommentGuard } from 'src/core/guards/comment.guard';
 
 @UseGuards(AuthGuard)
 @Controller('comments')
@@ -31,11 +32,9 @@ export class CommentsController {
     return await this.commentsService.getPostComments(postId);
   }
 
+  @UseGuards(CommentGuard)
   @Delete('delete/:commentId')
-  public async deleteComment(
-    @Param('commentId') commentId: string,
-    @Request() req,
-  ) {
-    return await this.commentsService.deleteComment(commentId, req.user.id);
+  public async deleteComment(@Param('commentId') commentId: string) {
+    return await this.commentsService.deleteComment(commentId);
   }
 }
