@@ -136,4 +136,26 @@ export class PostsService {
       data: editedPost,
     };
   }
+
+  public async deletePost(
+    postId: string,
+    userId: string,
+  ): Promise<{ message: string; data: object }> {
+    const postToDelete = await this.postRepository.findByPk<Post>(postId);
+
+    if (!postToDelete) {
+      throw new NotFoundException(POST_NOT_FOUND_MESSAGE);
+    }
+
+    if (postToDelete.dataValues.authorId !== userId) {
+      throw new ForbiddenException();
+    }
+
+    await this.postRepository.destroy({ where: { id: postId } });
+
+    return {
+      message: 'Post deleted successfully',
+      data: {},
+    };
+  }
 }

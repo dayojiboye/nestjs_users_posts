@@ -8,6 +8,7 @@ import {
   Query,
   Param,
   Put,
+  Delete,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AuthGuard } from 'src/core/guards/auth.guard';
@@ -40,5 +41,10 @@ export class PostsController {
     @Request() req,
   ) {
     return await this.postsService.updatePost(postId, req.user.id, updatedPost);
+  }
+
+  @Delete('delete/:postId')
+  public async deletePost(@Param('postId') postId: string, @Request() req) {
+    return await this.postsService.deletePost(postId, req.user.id);
   }
 }
