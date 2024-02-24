@@ -44,6 +44,12 @@ export class User extends Model<User> {
   })
   username: string;
 
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  imageUrl: string;
+
   @HasMany(() => Post)
   posts: Post[];
 

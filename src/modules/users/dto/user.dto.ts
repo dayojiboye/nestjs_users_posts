@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class UserDto {
   @IsEmail({}, { message: 'Email must be a valid email' })
@@ -18,4 +18,7 @@ export class UserDto {
   @MinLength(3)
   @IsNotEmpty()
   readonly username: string;
+
+  @IsString()
+  readonly imageUrl: string;
 }

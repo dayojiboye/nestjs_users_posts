@@ -5,6 +5,7 @@ export const PRODUCTION = 'production';
 export const USER_REPOSITORY = 'USER_REPOSITORY';
 export const POST_REPOSITORY = 'POST_REPOSITORY';
 export const COMMENT_REPOSITORY = 'COMMENT_REPOSITORY';
+export const CLOUDINARY = 'CLOUDINARY';
 export const DEFAULT_SUCCESS_MESSAGE = 'Request processed successfully';
 export const INVALID_TOKEN_MESSAGE = 'Invalid token';
 export const BAD_TOKEN_FORMAT_MESSAGE = 'Bad Token Format';
@@ -15,3 +16,4 @@ export enum ORDER_BY {
   DESC = 'DESC',
   ASC = 'ASC',
 }
+export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];

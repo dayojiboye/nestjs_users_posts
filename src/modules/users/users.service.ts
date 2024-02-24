@@ -4,14 +4,21 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  UnprocessableEntityException,
   forwardRef,
 } from '@nestjs/common';
-import { USER_NOT_FOUND_MESSAGE, USER_REPOSITORY } from 'src/core/constants';
+import {
+  USER_NOT_FOUND_MESSAGE,
+  USER_REPOSITORY,
+  validMimeTypes,
+} from 'src/core/constants';
 import { User } from './user.entity';
 import { UserDto } from './dto/user.dto';
 import { UpdateNameDto } from './dto/update-name.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { AuthService } from '../auth/auth.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { UpdateImageDto } from './dto/update-image.dto';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +26,7 @@ export class UsersService {
     @Inject(USER_REPOSITORY) private readonly userRepository: typeof User,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   public async create(user: UserDto): Promise<User> {
@@ -94,6 +102,69 @@ export class UsersService {
     return {
       message: 'Password updated successfully',
       data: {},
+    };
+  }
+
+  public async updateImage(
+    file: Express.Multer.File,
+    body: UpdateImageDto,
+    userId: string,
+  ): Promise<{ message: string; data: User }> {
+    // Might as well move all these checks to an utility function
+    if (!file) {
+      throw new UnprocessableEntityException({
+        message: 'Image field must not be empty',
+        error: 'Unprocessable Entity',
+        statusCode: 422,
+      });
+    }
+
+    // Check if the file is an image
+    if (!file.mimetype.startsWith('image')) {
+      throw new UnprocessableEntityException({
+        message: 'Sorry, this file is not an image. Please try again',
+        error: 'Unprocessable Entity',
+        statusCode: 422,
+      });
+    }
+
+    // Check if image format is JPG | JPEG | PNG
+    if (!validMimeTypes.includes(file.mimetype)) {
+      throw new UnprocessableEntityException({
+        message: 'Invalid image file format',
+        error: 'Unprocessable Entity',
+        statusCode: 422,
+      });
+    }
+
+    // Check if the size of the image is not more than 3MB
+    if (file.size > 3000000) {
+      throw new UnprocessableEntityException({
+        message: 'Please upload an image size not more than 3MB',
+        error: 'Unprocessable Entity',
+        statusCode: 422,
+      });
+    }
+
+    // const uploadedImage = await this.cloudinaryService
+    //   .uploadFile(file)
+    //   .then((r) => console.log(r))
+    //   .catch(() => {
+    //     throw new BadRequestException('Invalid file type.');
+    //   });
+
+    const imageResponse = await this.cloudinaryService.uploadFile(file);
+    body.imageUrl = imageResponse.url;
+
+    await this.userRepository.update<User>(body, {
+      where: { id: userId },
+    });
+
+    const editedUser = await this.findOneById(userId);
+
+    return {
+      message: 'Profile picture updated successfully',
+      data: editedUser,
     };
   }
 }

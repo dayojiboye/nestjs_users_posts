@@ -28,6 +28,7 @@ export class AuthService {
     // Hash the password
     const hashedPassword = await this.hashPassword(user.password);
 
+    // To-Do: Integrate registration with profile picture
     // Create the user
     const newUser = await this.userService.create({
       ...user,

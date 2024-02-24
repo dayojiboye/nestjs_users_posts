@@ -1,0 +1,11 @@
+const path = require('path');
+
+// Exporting an object containing paths for database-related files
+module.exports = {
+  // directory containing database seeders (data population scripts)
+  // 'seeders-path': path.resolve('src/core/database', 'seeders'),
+  // Path to the directory containing database migrations (schema change scripts)
+  'migrations-path': path.resolve('src/core/database', 'migrations'),
+  // Database configuration file
+  config: path.resolve('src/core/database', 'database.config.ts'),
+};

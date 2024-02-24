@@ -1,9 +1,11 @@
-import * as dotenv from 'dotenv';
-import { IDatabaseConfig } from './interfaces/dbConfig.interface';
+/* eslint-disable @typescript-eslint/no-var-requires */
+// import * as dotenv from 'dotenv';
+// import { IDatabaseConfig } from './interfaces/dbConfig.interface';
+const dotenv = require('dotenv');
 
 dotenv.config();
 
-export const databaseConfig: IDatabaseConfig = {
+const databaseConfig = {
   development: {
     username: process.env.DB_USER,
     password: '',
@@ -28,3 +30,5 @@ export const databaseConfig: IDatabaseConfig = {
     dialect: process.env.DB_DIALECT,
   },
 };
+
+module.exports = databaseConfig;
