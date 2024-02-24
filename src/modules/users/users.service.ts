@@ -6,11 +6,7 @@ import {
   UnauthorizedException,
   forwardRef,
 } from '@nestjs/common';
-import {
-  INVALID_USER_CREDENTIALS_MESSAGE,
-  USER_NOT_FOUND_MESSAGE,
-  USER_REPOSITORY,
-} from 'src/core/constants';
+import { USER_NOT_FOUND_MESSAGE, USER_REPOSITORY } from 'src/core/constants';
 import { User } from './user.entity';
 import { UserDto } from './dto/user.dto';
 import { UpdateNameDto } from './dto/update-name.dto';
@@ -45,17 +41,11 @@ export class UsersService {
     body: UpdateNameDto,
     userId: string,
   ): Promise<{ message: string; data: User }> {
-    const userToUpdate = await this.findOneById(userId);
-
-    if (!userToUpdate) {
-      throw new NotFoundException(USER_NOT_FOUND_MESSAGE);
-    }
-
-    let editedUser: any = await this.userRepository.update<User>(body, {
+    await this.userRepository.update<User>(body, {
       where: { id: userId },
     });
 
-    editedUser = await this.findOneById(userId);
+    const editedUser = await this.findOneById(userId);
 
     return {
       message: 'User updated successfully',
@@ -73,9 +63,9 @@ export class UsersService {
       throw new NotFoundException(USER_NOT_FOUND_MESSAGE);
     }
 
-    if (userToUpdate.dataValues.password === body.newPassword) {
+    if (body.oldPassword === body.newPassword) {
       throw new ForbiddenException(
-        "New password value can't be the same with current password",
+        'Old password and new password values can not be the same',
       );
     }
 
@@ -85,7 +75,7 @@ export class UsersService {
     );
 
     if (!match) {
-      throw new UnauthorizedException(INVALID_USER_CREDENTIALS_MESSAGE);
+      throw new UnauthorizedException('Current password is incorrect');
     }
 
     const hashedPassword = await this.authService.hashPassword(
