@@ -16,4 +16,4 @@ export enum ORDER_BY {
   DESC = 'DESC',
   ASC = 'ASC',
 }
-export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+export const validImageMimeTypes = ['.png', '.jpg', '.jpeg'];

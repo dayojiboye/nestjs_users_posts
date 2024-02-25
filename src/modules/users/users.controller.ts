@@ -14,6 +14,8 @@ import { UpdateUserGuard } from 'src/core/guards/update-user.guard';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateImageDto } from './dto/update-image.dto';
+import { validateImage } from 'src/core/pipes/image-validator.pipe';
+import { validImageMimeTypes } from 'src/core/constants';
 
 @Controller('users')
 export class UsersController {
@@ -41,7 +43,8 @@ export class UsersController {
   @Put('update/profile-picture')
   @UseInterceptors(FileInterceptor('imageUrl'))
   public async updateUserImage(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(validateImage(validImageMimeTypes))
+    file: Express.Multer.File,
     @Body() updateImageDto: UpdateImageDto,
     @Request() req,
   ) {
