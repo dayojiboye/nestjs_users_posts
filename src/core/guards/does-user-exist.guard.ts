@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Injectable,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { UsersService } from '../../modules/users/users.service';
@@ -20,6 +21,10 @@ export class DoesUserExist implements CanActivate {
   }
 
   private async validateRequest(request: { body: UserDto }) {
+    if (!request.body.email || !request.body.username) {
+      throw new BadRequestException('Email and username must not be empty');
+    }
+
     const emailExists = await this.usersService.findOneByEmail(
       request.body.email,
     );

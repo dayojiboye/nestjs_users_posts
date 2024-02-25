@@ -49,6 +49,7 @@ export class UsersService {
     });
 
     const editedUser = await this.findOneById(userId);
+    delete editedUser.dataValues.password;
 
     return {
       message: 'User updated successfully',
@@ -120,6 +121,7 @@ export class UsersService {
     });
 
     const editedUser = await this.findOneById(userId);
+    delete editedUser.dataValues.password;
 
     return {
       message: 'Profile picture updated successfully',
