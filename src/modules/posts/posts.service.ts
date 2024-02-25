@@ -9,18 +9,30 @@ import { Post } from './post.entity';
 import { Sequelize } from 'sequelize-typescript';
 import { User } from '../users/user.entity';
 import { Comment } from '../comments/comment.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Injectable()
 export class PostsService {
   constructor(
     @Inject(POST_REPOSITORY)
     private readonly postRepository: typeof Post,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   public async create(
     post: CreatePostDto,
     authorId: string,
+    files: Array<Express.Multer.File>,
   ): Promise<{ message: string; data: Post }> {
+    if (files) {
+      const uploadResponse = await Promise.all(
+        files.map((file) => this.cloudinaryService.uploadFile(file)),
+      );
+
+      post.images = uploadResponse.map((response) => response.url);
+    }
+
     const newPost = await this.postRepository.create<Post>({
       ...post,
       authorId,
@@ -106,8 +118,17 @@ export class PostsService {
 
   public async updatePost(
     postId: string,
-    body: CreatePostDto,
+    body: UpdatePostDto,
+    files: Array<Express.Multer.File>,
   ): Promise<{ message: string; data: Post }> {
+    if (files) {
+      const uploadResponse = await Promise.all(
+        files.map((file) => this.cloudinaryService.uploadFile(file)),
+      );
+
+      body.images = uploadResponse.map((response) => response.url);
+    }
+
     await this.postRepository.update<Post>(body, {
       where: { id: postId },
     });

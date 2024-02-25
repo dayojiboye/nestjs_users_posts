@@ -32,6 +32,19 @@ export class Post extends Model<Post> {
   })
   body: string;
 
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    get() {
+      if (this.getDataValue('images'))
+        return this.getDataValue('images').split(';');
+    },
+    set(val: string[]) {
+      this.setDataValue('images', val.join(';'));
+    },
+  })
+  images: string[];
+
   @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,

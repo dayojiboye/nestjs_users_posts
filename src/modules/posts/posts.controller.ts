@@ -9,11 +9,17 @@ import {
   Param,
   Put,
   Delete,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AuthGuard } from 'src/core/guards/auth.guard';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostGuard } from 'src/core/guards/post.guard';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { validateMultiImages } from 'src/core/pipes/multi-images-validator.pipe';
+import { validMultiImagesMimeTypes } from 'src/core/constants';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @UseGuards(AuthGuard)
 @Controller('posts')
@@ -21,8 +27,14 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post('create')
-  public async createPost(@Body() newPost: CreatePostDto, @Request() req) {
-    return await this.postsService.create(newPost, req.user.id);
+  @UseInterceptors(AnyFilesInterceptor())
+  public async createPost(
+    @Body() newPost: CreatePostDto,
+    @Request() req,
+    @UploadedFiles(validateMultiImages(validMultiImagesMimeTypes))
+    files: Array<Express.Multer.File>,
+  ) {
+    return await this.postsService.create(newPost, req.user.id, files);
   }
 
   @Get('')
@@ -37,11 +49,14 @@ export class PostsController {
 
   @UseGuards(PostGuard)
   @Put('update/:postId')
+  @UseInterceptors(AnyFilesInterceptor())
   public async updatePost(
+    @UploadedFiles(validateMultiImages(validMultiImagesMimeTypes))
+    files: Array<Express.Multer.File>,
     @Param('postId') postId: string,
-    @Body() updatedPost: CreatePostDto,
+    @Body() updatedPost: UpdatePostDto,
   ) {
-    return await this.postsService.updatePost(postId, updatedPost);
+    return await this.postsService.updatePost(postId, updatedPost, files);
   }
 
   @UseGuards(PostGuard)

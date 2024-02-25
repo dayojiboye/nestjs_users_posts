@@ -17,3 +17,4 @@ export enum ORDER_BY {
   ASC = 'ASC',
 }
 export const validImageMimeTypes = ['.png', '.jpg', '.jpeg'];
+export const validMultiImagesMimeTypes = ['.gif', ...validImageMimeTypes];
