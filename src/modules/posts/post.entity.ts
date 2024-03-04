@@ -46,11 +46,17 @@ export class Post extends Model<Post> {
   images: string[];
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.STRING,
     allowNull: true,
-    defaultValue: DataType.INTEGER,
+    get() {
+      if (this.getDataValue('views'))
+        return this.getDataValue('views').split(';');
+    },
+    set(val: string[]) {
+      this.setDataValue('views', val.join(';'));
+    },
   })
-  views: number;
+  views: string[];
 
   @ForeignKey(() => User)
   @Column({

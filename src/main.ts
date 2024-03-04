@@ -22,3 +22,6 @@ bootstrap();
 
 // Command to generate controller
 // nest g co /modules/auth
+
+// Start Redis server
+// brew services start redis

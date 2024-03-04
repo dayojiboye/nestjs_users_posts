@@ -82,6 +82,16 @@ export class PostsService {
   public async getPostById(
     postId: string,
   ): Promise<{ message: string; data: Post | object }> {
+    const cachedData = await this.cacheManager.get<Post>(postId);
+
+    if (cachedData) {
+      console.log('Got post from cache');
+      return {
+        message: DEFAULT_SUCCESS_MESSAGE,
+        data: cachedData,
+      };
+    }
+
     const post = await this.postRepository.findByPk<Post>(postId, {
       attributes: {
         include: [
@@ -99,12 +109,31 @@ export class PostsService {
           as: 'author',
           attributes: ['id', 'username'],
         },
+        {
+          model: Comment,
+          as: 'comments',
+          include: [
+            {
+              model: User,
+              as: 'author',
+              attributes: ['id', 'username'],
+            },
+          ],
+        },
       ],
+      order: [[Post.associations.comments, 'createdAt', 'DESC']],
     });
+
+    if (!post) {
+      throw new NotFoundException(POST_NOT_FOUND_MESSAGE);
+    }
+
+    await this.cacheManager.set(postId, post);
+    console.log('Stored post in cache');
 
     return {
       message: DEFAULT_SUCCESS_MESSAGE,
-      data: post ?? {},
+      data: post,
     };
   }
 
@@ -147,59 +176,45 @@ export class PostsService {
   public async viewPost(
     postId: string,
     userId: string,
-  ): Promise<{ message: string; data: Post }> {
+  ): Promise<{ message: string; data: number }> {
     const cacheKey = `post_views_${postId}`;
-
-    // Cache Post response with CacheInterceptor in controller
-    // Find a way to show updated views with the cached response
-    // https://stackoverflow.com/questions/54087231/how-can-i-count-the-view-of-a-specific-post-by-a-user-count-every-user-just-on
-    const post = await this.postRepository.findByPk<Post>(postId, {
-      attributes: {
-        include: [
-          [
-            Sequelize.literal(
-              '(SELECT COUNT(*) FROM Comments WHERE Comments.postId = Post.id)',
-            ),
-            'totalComments',
-          ],
-        ],
-      },
-      include: [
-        {
-          model: User,
-          as: 'author',
-          attributes: ['id', 'username'],
-        },
-        {
-          model: Comment,
-          as: 'comments',
-          include: [
-            {
-              model: User,
-              as: 'author',
-              attributes: ['id', 'username'],
-            },
-          ],
-        },
-      ],
-      order: [[Post.associations.comments, 'createdAt', 'DESC']],
-    });
-
+    const post = await this.postRepository.findByPk<Post>(postId);
     if (!post) {
       throw new NotFoundException(POST_NOT_FOUND_MESSAGE);
     }
 
+    const cachedData = await this.cacheManager.get<string[]>(cacheKey);
+
+    // Check if there's a cached data for the post views
+    if (cachedData) {
+      return {
+        message: DEFAULT_SUCCESS_MESSAGE,
+        data: cachedData.length,
+      };
+    }
+
+    // Only update views if user is not author of post
     if (post.dataValues.authorId !== userId) {
-      await this.cacheManager.set(cacheKey, post.dataValues.views + 1);
-      const cachedData = await this.cacheManager.get<number>(cacheKey);
-      console.log('Data set to cache', cachedData);
-      post.views = cachedData;
-      await post.save();
+      // Check if views isn't null in DB and return an empty array if it is
+      const DBViews = post.dataValues.views ? post.views : [];
+      // Cxheck if userId exists in post views
+      const hasViewed = DBViews.some((id) => id === userId);
+      // If userId exists, return post views or add userId if it doesn't exist
+      const updatedViews: string[] = hasViewed
+        ? post.views
+        : [...post.views, userId];
+      await this.cacheManager.set(cacheKey, updatedViews);
+      console.log('Views updated in cache');
+      // Update post views in DB if userId doesn't exist
+      if (!hasViewed) {
+        post.views = updatedViews;
+        await post.save();
+      }
     }
 
     return {
       message: DEFAULT_SUCCESS_MESSAGE,
-      data: post,
+      data: post.views.length,
     };
   }
 }

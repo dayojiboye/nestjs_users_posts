@@ -46,6 +46,7 @@ export class PostsController {
     return await this.postsService.getAllPosts(userId);
   }
 
+  // @UseInterceptors(CacheInterceptor)
   @Get(':postId')
   public async getPost(@Param('postId') postId: string) {
     return await this.postsService.getPostById(postId);
@@ -69,7 +70,6 @@ export class PostsController {
     return await this.postsService.deletePost(postId);
   }
 
-  // @UseInterceptors(CacheInterceptor)
   @Get('view/:postId')
   public async viewPost(@Param('postId') postId: string, @Req() req) {
     return await this.postsService.viewPost(postId, req.user.id);
