@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   DEFAULT_SUCCESS_MESSAGE,
   ORDER_BY,
@@ -17,6 +17,8 @@ import { Cache } from 'cache-manager';
 
 @Injectable()
 export class PostsService {
+  private readonly logger = new Logger(PostsService.name);
+
   constructor(
     @Inject(POST_REPOSITORY)
     private readonly postRepository: typeof Post,
@@ -85,7 +87,7 @@ export class PostsService {
     const cachedData = await this.cacheManager.get<Post>(postId);
 
     if (cachedData) {
-      console.log('Got post from cache');
+      this.logger.log('Got post from cache');
       return {
         message: DEFAULT_SUCCESS_MESSAGE,
         data: cachedData,
@@ -129,7 +131,7 @@ export class PostsService {
     }
 
     await this.cacheManager.set(postId, post);
-    console.log('Stored post in cache');
+    this.logger.log('Stored post in cache');
 
     return {
       message: DEFAULT_SUCCESS_MESSAGE,
@@ -189,7 +191,7 @@ export class PostsService {
     if (cachedData) {
       // Return cached data only if userId exists in cached data
       if (cachedData.some((id) => id === userId)) {
-        console.log('Retrieved from cache');
+        this.logger.log('Retrieved post views from cache');
         return {
           message: DEFAULT_SUCCESS_MESSAGE,
           data: cachedData.length ?? 0,
@@ -206,7 +208,7 @@ export class PostsService {
       // If userId exists, return post views or add userId if it doesn't exist
       const updatedViews: string[] = hasViewed ? DBViews : [...DBViews, userId];
       await this.cacheManager.set(cacheKey, updatedViews);
-      console.log('Views updated in cache');
+      this.logger.log('Views updated in cache');
       // Update post views in DB if userId doesn't exist
       if (!hasViewed) {
         post.views = updatedViews;
