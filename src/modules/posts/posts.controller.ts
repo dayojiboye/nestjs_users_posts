@@ -11,6 +11,8 @@ import {
   Delete,
   UseInterceptors,
   UploadedFiles,
+  HttpCode,
+  Req,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AuthGuard } from 'src/core/guards/auth.guard';
@@ -20,6 +22,7 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { validateMultiImages } from 'src/core/pipes/multi-images-validator.pipe';
 import { validMultiImagesMimeTypes } from 'src/core/constants';
 import { UpdatePostDto } from './dto/update-post.dto';
+// import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @UseGuards(AuthGuard)
 @Controller('posts')
@@ -28,6 +31,7 @@ export class PostsController {
 
   @Post('create')
   @UseInterceptors(AnyFilesInterceptor())
+  @HttpCode(200)
   public async createPost(
     @Body() newPost: CreatePostDto,
     @Request() req,
@@ -63,5 +67,11 @@ export class PostsController {
   @Delete('delete/:postId')
   public async deletePost(@Param('postId') postId: string) {
     return await this.postsService.deletePost(postId);
+  }
+
+  // @UseInterceptors(CacheInterceptor)
+  @Get('view/:postId')
+  public async viewPost(@Param('postId') postId: string, @Req() req) {
+    return await this.postsService.viewPost(postId, req.user.id);
   }
 }

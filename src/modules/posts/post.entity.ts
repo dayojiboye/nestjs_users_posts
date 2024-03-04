@@ -45,6 +45,13 @@ export class Post extends Model<Post> {
   })
   images: string[];
 
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    defaultValue: DataType.INTEGER,
+  })
+  views: number;
+
   @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,

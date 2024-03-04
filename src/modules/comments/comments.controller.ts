@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Post,
   Request,
@@ -19,6 +20,7 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post('create/:postId')
+  @HttpCode(200)
   public async createComment(
     @Body() newComment: CreateCommentDto,
     @Param('postId') postId: string,

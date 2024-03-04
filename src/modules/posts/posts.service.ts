@@ -1,7 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   DEFAULT_SUCCESS_MESSAGE,
   ORDER_BY,
+  POST_NOT_FOUND_MESSAGE,
   POST_REPOSITORY,
 } from 'src/core/constants';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -11,6 +12,8 @@ import { User } from '../users/user.entity';
 import { Comment } from '../comments/comment.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class PostsService {
@@ -18,6 +21,7 @@ export class PostsService {
     @Inject(POST_REPOSITORY)
     private readonly postRepository: typeof Post,
     private readonly cloudinaryService: CloudinaryService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   public async create(
@@ -95,19 +99,7 @@ export class PostsService {
           as: 'author',
           attributes: ['id', 'username'],
         },
-        {
-          model: Comment,
-          as: 'comments',
-          include: [
-            {
-              model: User,
-              as: 'author',
-              attributes: ['id', 'username'],
-            },
-          ],
-        },
       ],
-      order: [[Post.associations.comments, 'createdAt', 'DESC']],
     });
 
     return {
@@ -149,6 +141,65 @@ export class PostsService {
     return {
       message: 'Post deleted successfully',
       data: {},
+    };
+  }
+
+  public async viewPost(
+    postId: string,
+    userId: string,
+  ): Promise<{ message: string; data: Post }> {
+    const cacheKey = `post_views_${postId}`;
+
+    // Cache Post response with CacheInterceptor in controller
+    // Find a way to show updated views with the cached response
+    // https://stackoverflow.com/questions/54087231/how-can-i-count-the-view-of-a-specific-post-by-a-user-count-every-user-just-on
+    const post = await this.postRepository.findByPk<Post>(postId, {
+      attributes: {
+        include: [
+          [
+            Sequelize.literal(
+              '(SELECT COUNT(*) FROM Comments WHERE Comments.postId = Post.id)',
+            ),
+            'totalComments',
+          ],
+        ],
+      },
+      include: [
+        {
+          model: User,
+          as: 'author',
+          attributes: ['id', 'username'],
+        },
+        {
+          model: Comment,
+          as: 'comments',
+          include: [
+            {
+              model: User,
+              as: 'author',
+              attributes: ['id', 'username'],
+            },
+          ],
+        },
+      ],
+      order: [[Post.associations.comments, 'createdAt', 'DESC']],
+    });
+
+    if (!post) {
+      throw new NotFoundException(POST_NOT_FOUND_MESSAGE);
+    }
+
+    if (post.dataValues.authorId !== userId) {
+      await this.cacheManager.set(cacheKey, post.dataValues.views + 1);
+      const cachedData = await this.cacheManager.get<number>(cacheKey);
+      console.log('Data set to cache', cachedData);
+      post.views = cachedData;
+      await post.save();
+    }
+
+    return {
+      message: DEFAULT_SUCCESS_MESSAGE,
+      data: post,
     };
   }
 }
