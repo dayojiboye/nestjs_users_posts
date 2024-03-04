@@ -187,22 +187,24 @@ export class PostsService {
 
     // Check if there's a cached data for the post views
     if (cachedData) {
-      return {
-        message: DEFAULT_SUCCESS_MESSAGE,
-        data: cachedData.length,
-      };
+      // Return cached data only if userId exists in cached data
+      if (cachedData.some((id) => id === userId)) {
+        console.log('Retrieved from cache');
+        return {
+          message: DEFAULT_SUCCESS_MESSAGE,
+          data: cachedData.length ?? 0,
+        };
+      }
     }
 
     // Only update views if user is not author of post
     if (post.dataValues.authorId !== userId) {
       // Check if views isn't null in DB and return an empty array if it is
-      const DBViews = post.dataValues.views ? post.views : [];
-      // Cxheck if userId exists in post views
+      const DBViews = post.views ? post.views : [];
+      // Check if userId exists in post views
       const hasViewed = DBViews.some((id) => id === userId);
       // If userId exists, return post views or add userId if it doesn't exist
-      const updatedViews: string[] = hasViewed
-        ? post.views
-        : [...post.views, userId];
+      const updatedViews: string[] = hasViewed ? DBViews : [...DBViews, userId];
       await this.cacheManager.set(cacheKey, updatedViews);
       console.log('Views updated in cache');
       // Update post views in DB if userId doesn't exist
@@ -214,7 +216,7 @@ export class PostsService {
 
     return {
       message: DEFAULT_SUCCESS_MESSAGE,
-      data: post.views.length,
+      data: post.views.length ?? 0,
     };
   }
 }
