@@ -26,7 +26,12 @@ export class CommentsController {
     @Param('postId') postId: string,
     @Request() req,
   ) {
-    return await this.commentsService.create(newComment, postId, req.user.id);
+    return await this.commentsService.create(
+      newComment,
+      postId,
+      req.user.id,
+      req.user.username,
+    );
   }
 
   @Get(':postId')

@@ -83,7 +83,7 @@ export class PostsService {
 
   public async getPostById(
     postId: string,
-  ): Promise<{ message: string; data: Post | object }> {
+  ): Promise<{ message: string; data: Post }> {
     const cachedData = await this.cacheManager.get<Post>(postId);
 
     if (cachedData) {
@@ -109,7 +109,7 @@ export class PostsService {
         {
           model: User,
           as: 'author',
-          attributes: ['id', 'username'],
+          attributes: ['id', 'username', 'email', 'firstName', 'lastName'],
         },
         {
           model: Comment,
@@ -187,16 +187,13 @@ export class PostsService {
 
     const cachedData = await this.cacheManager.get<string[]>(cacheKey);
 
-    // Check if there's a cached data for the post views
-    if (cachedData) {
-      // Return cached data only if userId exists in cached data
-      if (cachedData.some((id) => id === userId)) {
-        this.logger.log('Retrieved post views from cache');
-        return {
-          message: DEFAULT_SUCCESS_MESSAGE,
-          data: cachedData.length ?? 0,
-        };
-      }
+    // Return cached data only if cache data exists and userId exists in cached data
+    if (cachedData && cachedData.some((id) => id === userId)) {
+      this.logger.log('Retrieved post views from cache');
+      return {
+        message: DEFAULT_SUCCESS_MESSAGE,
+        data: cachedData.length ?? 0,
+      };
     }
 
     // Only update views if user is not author of post

@@ -12,6 +12,7 @@ export const BAD_TOKEN_FORMAT_MESSAGE = 'Bad Token Format';
 export const INVALID_USER_CREDENTIALS_MESSAGE = 'Invalid user credentials';
 export const USER_NOT_FOUND_MESSAGE = 'No user found';
 export const POST_NOT_FOUND_MESSAGE = 'No post found';
+export const NEW_COMMENT_NOTIFICATION = 'new-comment';
 export enum ORDER_BY {
   DESC = 'DESC',
   ASC = 'ASC',

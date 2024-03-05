@@ -10,4 +10,6 @@ export class CreatePostDto {
   @IsArray()
   @IsOptional()
   images: string[];
+
+  // To-Do: Add authorId
 }
